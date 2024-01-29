@@ -429,7 +429,7 @@ module Rodauth
       require 'bcrypt' if require_bcrypt?
       db.extension :date_arithmetic if use_date_arithmetic?
 
-      if convert_token_id_to_integer?.nil? && (db rescue false) && db.table_exists?(accounts_table) && db.schema(accounts_table).find{|col, v| break v[:type] == :integer if col == account_id_column}
+      if method(:convert_token_id_to_integer?).owner == Rodauth::Base && (db rescue false) && db.table_exists?(accounts_table) && db.schema(accounts_table).find{|col, v| break v[:type] == :integer if col == account_id_column}
         self.class.send(:define_method, :convert_token_id_to_integer?){true}
       end
 
@@ -712,7 +712,7 @@ module Rodauth
     # note that only the salt is returned.
     def get_password_hash
       if account_password_hash_column
-        account![account_password_hash_column]
+        account[account_password_hash_column] if account!
       elsif use_database_authentication_functions?
         db.get(Sequel.function(function_name(:rodauth_get_salt), account ? account_id : session_value))
       else
